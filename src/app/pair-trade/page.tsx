@@ -106,7 +106,10 @@ export default function PairTradePage() {
     <div className="min-h-screen bg-[#0B0F1A] text-white">
        <nav className="border-b border-white/5 p-4 flex justify-between items-center bg-[#0D121F]">
         <div className="font-bold text-xl tracking-tighter">
-          <Link href="/dashboard">Ln Lognormal</Link>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <span className="bg-emerald-500 w-8 h-8 rounded-lg flex items-center justify-center text-black font-serif italic">Ln</span>
+            Lognormal
+          </Link>
         </div>
         <div className="flex items-center gap-6">
             <Link href="/dashboard" className="text-sm font-semibold text-slate-400 hover:text-white transition">Dashboard</Link>

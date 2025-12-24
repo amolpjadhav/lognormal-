@@ -36,8 +36,9 @@ export default function LandingPage() {
       }
       
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login Error:", error);
+      alert(`Login failed: ${error.message}`);
     }
   };
 
@@ -123,7 +124,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-2xl font-mono text-slate-200">${stock.price.toFixed(2)}</span>
+                <span className="text-2xl font-mono text-slate-200">${stock.price ? stock.price.toFixed(2) : "0.00"}</span>
                 <span className="text-xs text-slate-500 mb-1">Real-time</span>
               </div>
             </div>

@@ -31,8 +31,9 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login Error:", error);
+      alert(`Login failed: ${error.message}`);
     }
   };
 
