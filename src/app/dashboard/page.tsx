@@ -98,7 +98,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-[#0B0F1A] text-white">
        <nav className="border-b border-white/5 p-4 flex justify-between items-center bg-[#0D121F]">
         <div className="font-bold text-xl tracking-tighter">
-          <Link href="/dashboard">α AlphaStream<span className="text-emerald-500 text-sm italic ml-1">LAB</span></Link>
+          <Link href="/dashboard">Ln Lognormal</Link>
         </div>
         <div className="flex items-center gap-6">
           <Link href="/pair-trade" className="text-sm font-semibold text-slate-400 hover:text-emerald-400 transition">

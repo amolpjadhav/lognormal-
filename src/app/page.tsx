@@ -19,7 +19,7 @@ export default function LandingPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Check for existing AlphaStream profile
+      // Check for existing Lognormal profile
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
@@ -54,8 +54,8 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="flex justify-between p-6 max-w-7xl mx-auto items-center">
         <div className="font-bold text-2xl tracking-tighter flex items-center gap-2">
-          <span className="bg-emerald-500 w-8 h-8 rounded-lg flex items-center justify-center text-black">α</span>
-          AlphaStream<span className="text-emerald-500">Lab</span>
+          <span className="bg-emerald-500 w-8 h-8 rounded-lg flex items-center justify-center text-black font-serif italic">Ln</span>
+          Lognormal
         </div>
         
         <div className="flex items-center gap-6">
@@ -78,7 +78,7 @@ export default function LandingPage() {
       <header className="max-w-7xl mx-auto px-6 pt-24 pb-20 lg:flex items-center gap-12">
         <div className="lg:w-1/2 space-y-8">
           <h1 className="text-5xl lg:text-7xl font-black leading-[1.1]">
-            {user ? `Welcome back, ${user.displayName?.split(' ')[0]}` : "Master your Alpha Ratio."}
+            {user ? `Welcome back, ${user.displayName?.split(' ')[0]}` : "Master your Lognormal Edge."}
           </h1>
 
           <p className="text-xl text-slate-400 max-w-xl">

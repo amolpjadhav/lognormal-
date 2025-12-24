@@ -13,7 +13,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Check for existing AlphaStream profile
+      // Check for existing Lognormal profile
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
