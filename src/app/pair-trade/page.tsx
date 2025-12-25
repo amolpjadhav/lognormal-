@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { useAuth, logoutUser } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp } from "firebase/firestore";
-import { getAssetPrices } from "@/lib/market-data";
+import { getAssetPrices, type AssetQuote } from "@/lib/market-data";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AiChatbot from "@/components/AiChatbot";
 
 interface RatioPair {
   id: string;
@@ -18,7 +19,7 @@ export default function PairTradePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [pairs, setPairs] = useState<RatioPair[]>([]);
-  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [prices, setPrices] = useState<Record<string, AssetQuote>>({});
   const [numInput, setNumInput] = useState("");
   const [denomInput, setDenomInput] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -28,7 +29,6 @@ export default function PairTradePage() {
     router.push("/");
   };
 
-  // Auth check
   useEffect(() => {
     if (!loading && !user) router.push("/");
   }, [user, loading, router]);
@@ -39,14 +39,13 @@ export default function PairTradePage() {
     const q = query(collection(db, "users", user.uid, "ratios"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedPairs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as RatioPair));
-      fetchedPairs.sort((a, b) => {
+      // Client-side sort
+       fetchedPairs.sort((a, b) => {
         const tA = a.addedAt?.seconds || 0;
         const tB = b.addedAt?.seconds || 0;
         return tB - tA;
       });
       setPairs(fetchedPairs);
-    }, (error) => {
-      console.error("Error fetching pairs:", error);
     });
     return () => unsubscribe();
   }, [user]);
@@ -73,23 +72,16 @@ export default function PairTradePage() {
     if (!user || !numInput || !denomInput) return;
     setIsAdding(true);
     try {
-      // Add a timeout to prevent the button from getting stuck
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 10000));
-      
-      await Promise.race([
-        addDoc(collection(db, "users", user.uid, "ratios"), {
-          numerator: numInput.toUpperCase(),
-          denominator: denomInput.toUpperCase(),
-          addedAt: serverTimestamp()
-        }),
-        timeoutPromise
-      ]);
-
+      await addDoc(collection(db, "users", user.uid, "ratios"), {
+        numerator: numInput.toUpperCase(),
+        denominator: denomInput.toUpperCase(),
+        addedAt: serverTimestamp()
+      });
       setNumInput("");
       setDenomInput("");
     } catch (err) {
       console.error(err);
-      alert("Failed to add pair. Please try again.");
+      alert("Failed to add pair.");
     } finally {
       setIsAdding(false);
     }
@@ -113,7 +105,12 @@ export default function PairTradePage() {
         </div>
         <div className="flex items-center gap-6">
             <Link href="/dashboard" className="text-sm font-semibold text-slate-400 hover:text-white transition">Dashboard</Link>
-            <button onClick={handleLogout} className="text-sm font-semibold text-slate-400 hover:text-red-400 transition">Sign Out</button>
+            <Link href="/watchlist" className="text-sm font-semibold text-slate-400 hover:text-white transition">Watchlist</Link>
+            <div className="flex items-center gap-4">
+               <span className="text-sm text-slate-400 hidden md:inline">{user?.displayName}</span>
+               {user?.photoURL && <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-emerald-500" />}
+               <button onClick={handleLogout} className="text-sm font-semibold text-slate-400 hover:text-red-400 transition">Sign Out</button>
+            </div>
         </div>
       </nav>
 
@@ -136,23 +133,30 @@ export default function PairTradePage() {
             </button>
         </form>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pairs.map(pair => {
-                const p1 = prices[pair.numerator];
-                const p2 = prices[pair.denominator];
+                const p1 = prices[pair.numerator]?.price;
+                const p2 = prices[pair.denominator]?.price;
                 const ratio = (p1 && p2) ? (p1 / p2) : null;
                 return (
                     <div key={pair.id} className="bg-[#161C2C] p-6 rounded-2xl border border-white/5 relative group hover:border-emerald-500/30 transition">
-                        <button onClick={() => handleDelete(pair.id)} className="absolute top-4 right-4 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">Delete</button>
+                        <button onClick={() => handleDelete(pair.id)} className="absolute top-4 right-4 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                         <div className="flex items-center gap-2 mb-4"><span className="text-xl font-bold">{pair.numerator}</span><span className="text-slate-500">/</span><span className="text-xl font-bold">{pair.denominator}</span></div>
                         <div className="text-4xl font-mono font-bold text-emerald-400 mb-2">{ratio ? ratio.toFixed(5) : "---"}</div>
                         <div className="flex justify-between text-xs text-slate-500"><span>{pair.numerator}: ${p1?.toLocaleString() ?? "---"}</span><span>{pair.denominator}: ${p2?.toLocaleString() ?? "---"}</span></div>
                     </div>
                 )
             })}
-             {pairs.length === 0 && <div className="col-span-full text-center text-slate-500 py-10 italic">No pairs tracked yet. Add a pair above to start watching ratios.</div>}
+            {pairs.length === 0 && (
+                <div className="col-span-full text-center text-slate-500 py-10 italic">
+                    No pairs tracked yet. Add a pair above to start watching ratios.
+                </div>
+            )}
         </div>
       </main>
+      <AiChatbot />
     </div>
-  )
+  );
 }

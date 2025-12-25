@@ -153,8 +153,14 @@ export async function getPopularStocks(): Promise<StockData[]> {
   });
 }
 
-export async function getAssetPrices(tickers: string[]): Promise<Record<string, number>> {
-  const prices: Record<string, number> = {};
+export interface AssetQuote {
+  price: number;
+  change: number;
+  changePercent: number;
+}
+
+export async function getAssetPrices(tickers: string[]): Promise<Record<string, AssetQuote>> {
+  const prices: Record<string, AssetQuote> = {};
   
   // Map common tickers to Finnhub symbols (Binance for crypto)
   const cryptoMap: Record<string, string> = {
@@ -180,7 +186,11 @@ export async function getAssetPrices(tickers: string[]): Promise<Record<string, 
         );
         const data = await response.json();
         if (data.c) {
-          prices[upper] = data.c;
+          prices[upper] = {
+            price: data.c,
+            change: data.d,
+            changePercent: data.dp
+          };
         }
       } catch (error) {
         console.error(`Error fetching asset ${ticker}:`, error);
@@ -202,8 +212,13 @@ export async function getAssetPrices(tickers: string[]): Promise<Record<string, 
         case 'NVDA': basePrice = 130.50; break;
         default: basePrice = 150.00; // Fallback for unknown stocks
       }
-      // Add +/- 2% random fluctuation
-      prices[ticker] = basePrice * (1 + (Math.random() * 0.04 - 0.02));
+      // Add +/- 2% random fluctuation and calculate fake change
+      const fluctuation = (Math.random() * 0.04 - 0.02);
+      const price = basePrice * (1 + fluctuation);
+      const change = price - basePrice;
+      const changePercent = fluctuation * 100;
+      
+      prices[ticker] = { price, change, changePercent };
     });
   }
 

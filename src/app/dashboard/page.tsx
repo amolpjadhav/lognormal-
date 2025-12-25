@@ -3,10 +3,11 @@ import { useState, useEffect } from "react";
 import { useAuth, logoutUser } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { collection, query, onSnapshot, deleteDoc, doc } from "firebase/firestore";
-import { getCryptoPrices, getAssetPrices, type MarketData } from "@/lib/market-data";
+import { getAssetPrices, type AssetQuote } from "@/lib/market-data";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AddAssetForm from "./AddAssetForm";
+import AiChatbot from "@/components/AiChatbot";
 
 interface Asset {
   id: string;
@@ -20,9 +21,8 @@ export default function Dashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({});
+  const [currentPrices, setCurrentPrices] = useState<Record<string, AssetQuote>>({});
   const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -65,17 +65,6 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [assets]);
 
-  // Fetch Market Data (BTC/ETH)
-  useEffect(() => {
-    const fetchPrices = async () => {
-      const data = await getCryptoPrices();
-      if (data) setMarketData(data);
-    };
-    fetchPrices();
-    const interval = setInterval(fetchPrices, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleDeleteAsset = async (assetId: string) => {
     if (!user) return;
     if (window.confirm("Are you sure you want to delete this asset?")) {
@@ -88,8 +77,20 @@ export default function Dashboard() {
   };
 
   const totalPortfolioValue = assets.reduce((sum, asset) => {
-    const price = currentPrices[asset.ticker] || asset.purchasePrice;
+    const price = currentPrices[asset.ticker]?.price || asset.purchasePrice;
     return sum + (price * asset.quantity);
+  }, 0);
+
+  const totalCostBasis = assets.reduce((sum, asset) => {
+    return sum + (asset.purchasePrice * asset.quantity);
+  }, 0);
+
+  const totalProfitLoss = totalPortfolioValue - totalCostBasis;
+  const totalProfitLossPercent = totalCostBasis > 0 ? (totalProfitLoss / totalCostBasis) * 100 : 0;
+
+  const dayProfitLoss = assets.reduce((sum, asset) => {
+    const change = currentPrices[asset.ticker]?.change || 0;
+    return sum + (change * asset.quantity);
   }, 0);
 
   if (loading) return <div className="min-h-screen bg-[#0B0F1A] flex items-center justify-center text-emerald-500">Loading...</div>;
@@ -104,11 +105,12 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="flex items-center gap-6">
-          <Link href="/pair-trade" className="text-sm font-semibold text-slate-400 hover:text-emerald-400 transition">
-            Pair Trade / Ratios
+          <Link href="/watchlist" className="text-sm font-semibold text-slate-400 hover:text-emerald-400 transition">
+            Watchlist
           </Link>
           <div className="flex items-center gap-4">
              <span className="text-sm text-slate-400 hidden md:inline">{user?.displayName}</span>
+             {user?.photoURL && <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-emerald-500" />}
              <button onClick={handleLogout} className="text-sm font-semibold text-slate-400 hover:text-red-400 transition">Sign Out</button>
           </div>
         </div>
@@ -126,21 +128,25 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-[#161C2C] p-6 rounded-2xl border border-white/5">
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Balance</p>
-            <h2 className="text-3xl font-mono mt-2">${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+          <div className="bg-gradient-to-br from-[#161C2C] to-[#0F172A] p-6 rounded-2xl border border-white/5 shadow-lg">
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Balance</p>
+            <h2 className="text-4xl font-mono font-bold text-white tracking-tight">${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
           </div>
+          
           <div className="bg-[#161C2C] p-6 rounded-2xl border border-white/5">
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">BTC / ETH Ratio</p>
-            <h2 className="text-3xl font-mono mt-2 text-emerald-400">
-              {marketData ? marketData.ratio.toFixed(4) : "---"}
-            </h2>
-             {marketData && (
-              <p className="text-xs text-slate-500 mt-1">BTC: ${marketData.btcPrice.toLocaleString()} / ETH: ${marketData.ethPrice.toLocaleString()}</p>
-            )}
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Profit / Loss</p>
+            <div className={`flex items-baseline gap-3 ${totalProfitLoss >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <h2 className="text-3xl font-mono font-bold">{totalProfitLoss >= 0 ? '+' : ''}${Math.abs(totalProfitLoss).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+              <span className="text-sm font-bold bg-white/5 px-2 py-1 rounded">{totalProfitLossPercent >= 0 ? '+' : ''}{totalProfitLossPercent.toFixed(2)}%</span>
+            </div>
           </div>
-           <div className="bg-[#161C2C] p-6 rounded-2xl border border-white/5 flex items-center justify-center">
-             <Link href="/pair-trade" className="text-emerald-500 font-bold hover:underline">View Pair Trades &rarr;</Link>
+
+          <div className="bg-[#161C2C] p-6 rounded-2xl border border-white/5">
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Day's P/L</p>
+            <div className={`flex items-baseline gap-3 ${dayProfitLoss >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <h2 className="text-3xl font-mono font-bold">{dayProfitLoss >= 0 ? '+' : ''}${Math.abs(dayProfitLoss).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+              <span className="text-xs text-slate-500">Today</span>
+            </div>
           </div>
         </div>
 
@@ -170,7 +176,7 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {assets.map((asset) => {
-                    const currentPrice = currentPrices[asset.ticker] || 0;
+                    const currentPrice = currentPrices[asset.ticker]?.price || 0;
                     const totalValue = currentPrice * asset.quantity;
                     const costBasis = asset.purchasePrice * asset.quantity;
                     const profitLoss = totalValue - costBasis;
@@ -205,6 +211,8 @@ export default function Dashboard() {
           )}
         </div>
       </main>
+
+      <AiChatbot />
 
       {isAddAssetOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
