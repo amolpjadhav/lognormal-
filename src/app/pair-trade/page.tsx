@@ -95,41 +95,52 @@ export default function PairTradePage() {
   if (loading) return <div className="min-h-screen bg-[#0B0F1A] flex items-center justify-center text-emerald-500">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#0B0F1A] text-white">
-       <nav className="border-b border-white/5 p-4 flex justify-between items-center bg-[#0D121F]">
-        <div className="font-bold text-xl tracking-tighter">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="bg-emerald-500 w-8 h-8 rounded-lg flex items-center justify-center text-black font-serif italic">Ln</span>
-            Lognormal
+    <div className="min-h-screen bg-[#030712] text-cyan-50 font-mono selection:bg-cyan-500/30 relative overflow-hidden">
+       {/* Cyberpunk Grid Background */}
+       <div className="fixed inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none z-0" />
+       
+       <nav className="relative z-10 border-b border-cyan-900/30 p-4 flex justify-between items-center bg-[#030712]/80 backdrop-blur-md">
+        <div className="font-bold text-xl tracking-tighter flex items-center gap-3">
+          <Link href="/dashboard" className="flex items-center gap-2 group">
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-500 blur-sm opacity-50 group-hover:opacity-100 transition"></div>
+              <span className="relative bg-black border border-cyan-500/50 w-10 h-10 rounded flex items-center justify-center text-cyan-400 font-bold text-lg">Ln</span>
+            </div>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">LOGNORMAL // TERMINAL</span>
           </Link>
         </div>
         <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm font-semibold text-slate-400 hover:text-white transition">Dashboard</Link>
-            <Link href="/watchlist" className="text-sm font-semibold text-slate-400 hover:text-white transition">Watchlist</Link>
+            <Link href="/dashboard" className="text-xs font-bold text-cyan-600 hover:text-cyan-400 uppercase tracking-widest transition">[ Dashboard ]</Link>
+            <Link href="/watchlist" className="text-xs font-bold text-cyan-600 hover:text-cyan-400 uppercase tracking-widest transition">[ Watchlist ]</Link>
             <div className="flex items-center gap-4">
-               <span className="text-sm text-slate-400 hidden md:inline">{user?.displayName}</span>
-               {user?.photoURL && <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-emerald-500" />}
-               <button onClick={handleLogout} className="text-sm font-semibold text-slate-400 hover:text-red-400 transition">Sign Out</button>
+               <span className="text-xs text-slate-400 hidden md:inline font-bold uppercase">{user?.displayName}</span>
+               {user?.photoURL && <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded border border-cyan-500/50" />}
+               <button onClick={handleLogout} className="text-xs font-bold text-red-500 hover:text-red-400 transition uppercase border border-red-900/30 px-3 py-1 rounded hover:bg-red-950/30">Disconnect</button>
             </div>
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-2">Pair Trade Watcher</h1>
-        <p className="text-slate-400 mb-8">Track relative value between assets (e.g. BTC/ETH, AAPL/MSFT).</p>
+      <main className="relative z-10 max-w-5xl mx-auto p-8">
+        <div className="mb-10">
+            <div className="text-xs text-cyan-600 font-bold tracking-[0.2em] mb-1">RELATIVE VALUE</div>
+            <h1 className="text-4xl font-black text-white tracking-tight uppercase">
+              Pair <span className="text-cyan-500">Trader</span>
+            </h1>
+            <p className="text-slate-400 text-sm mt-1 font-mono">Monitor synthetic spreads and ratio divergences.</p>
+        </div>
 
-        <form onSubmit={handleAddPair} className="bg-[#161C2C] p-6 rounded-2xl border border-white/5 mb-10 flex flex-col md:flex-row gap-4 items-end">
+        <form onSubmit={handleAddPair} className="bg-[#0B1221]/80 backdrop-blur-sm p-6 border border-cyan-900/30 mb-10 flex flex-col md:flex-row gap-4 items-end shadow-[0_0_20px_rgba(6,182,212,0.05)]">
             <div className="flex-1 w-full">
-                <label className="block text-xs text-slate-500 mb-1 uppercase font-bold">Long (Numerator)</label>
-                <input value={numInput} onChange={e => setNumInput(e.target.value)} className="w-full bg-[#0B0F1A] border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. BTC" />
+                <label className="block text-xs text-cyan-600 mb-1 uppercase font-bold tracking-widest">Long Asset</label>
+                <input value={numInput} onChange={e => setNumInput(e.target.value)} className="w-full bg-[#030712] border border-cyan-900/50 px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition font-mono" placeholder="e.g. BTC" />
             </div>
-            <div className="hidden md:flex items-center justify-center pb-3 text-slate-500 font-bold text-xl">/</div>
+            <div className="hidden md:flex items-center justify-center pb-4 text-cyan-800 font-bold text-xl">/</div>
             <div className="flex-1 w-full">
-                <label className="block text-xs text-slate-500 mb-1 uppercase font-bold">Short (Denominator)</label>
-                <input value={denomInput} onChange={e => setDenomInput(e.target.value)} className="w-full bg-[#0B0F1A] border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500" placeholder="e.g. ETH" />
+                <label className="block text-xs text-cyan-600 mb-1 uppercase font-bold tracking-widest">Short Asset</label>
+                <input value={denomInput} onChange={e => setDenomInput(e.target.value)} className="w-full bg-[#030712] border border-cyan-900/50 px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition font-mono" placeholder="e.g. ETH" />
             </div>
-            <button disabled={isAdding} type="submit" className="w-full md:w-auto bg-emerald-500 text-black font-bold px-6 py-2 rounded-xl hover:bg-emerald-400 transition disabled:opacity-50">
-                {isAdding ? "Adding..." : "Track Pair"}
+            <button disabled={isAdding} type="submit" className="w-full md:w-auto bg-cyan-600 text-black font-bold px-8 py-3 hover:bg-cyan-500 transition disabled:opacity-50 shadow-[0_0_15px_rgba(8,145,178,0.4)] uppercase tracking-wider">
+                {isAdding ? "PROCESSING..." : "INITIATE PAIR"}
             </button>
         </form>
 
@@ -139,19 +150,27 @@ export default function PairTradePage() {
                 const p2 = prices[pair.denominator]?.price;
                 const ratio = (p1 && p2) ? (p1 / p2) : null;
                 return (
-                    <div key={pair.id} className="bg-[#161C2C] p-6 rounded-2xl border border-white/5 relative group hover:border-emerald-500/30 transition">
-                        <button onClick={() => handleDelete(pair.id)} className="absolute top-4 right-4 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <div key={pair.id} className="bg-[#0B1221]/80 backdrop-blur-sm p-6 border border-cyan-900/30 relative group hover:border-cyan-500/50 transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+                        <button onClick={() => handleDelete(pair.id)} className="absolute top-4 right-4 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition p-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
-                        <div className="flex items-center gap-2 mb-4"><span className="text-xl font-bold">{pair.numerator}</span><span className="text-slate-500">/</span><span className="text-xl font-bold">{pair.denominator}</span></div>
-                        <div className="text-4xl font-mono font-bold text-emerald-400 mb-2">{ratio ? ratio.toFixed(5) : "---"}</div>
-                        <div className="flex justify-between text-xs text-slate-500"><span>{pair.numerator}: ${p1?.toLocaleString() ?? "---"}</span><span>{pair.denominator}: ${p2?.toLocaleString() ?? "---"}</span></div>
+                        <div className="flex items-center gap-2 mb-6">
+                            <span className="text-xl font-bold text-white font-mono">{pair.numerator}</span>
+                            <span className="text-cyan-600 font-light">/</span>
+                            <span className="text-xl font-bold text-white font-mono">{pair.denominator}</span>
+                        </div>
+                        <div className="text-4xl font-mono font-medium text-cyan-400 mb-4 tracking-tighter drop-shadow-[0_0_5px_rgba(6,182,212,0.5)]">{ratio ? ratio.toFixed(5) : "---"}</div>
+                        
+                        <div className="flex justify-between text-xs font-medium text-slate-500 border-t border-cyan-900/30 pt-4 font-mono">
+                            <span>{pair.numerator}: <span className="text-slate-300">${p1?.toLocaleString() ?? "---"}</span></span>
+                            <span>{pair.denominator}: <span className="text-slate-300">${p2?.toLocaleString() ?? "---"}</span></span>
+                        </div>
                     </div>
                 )
             })}
             {pairs.length === 0 && (
-                <div className="col-span-full text-center text-slate-500 py-10 italic">
-                    No pairs tracked yet. Add a pair above to start watching ratios.
+                <div className="col-span-full text-center text-slate-600 py-20 border border-dashed border-cyan-900/30 font-mono text-sm">
+                    // NO PAIRS DETECTED. INITIATE RATIO SYNTHESIS.
                 </div>
             )}
         </div>
